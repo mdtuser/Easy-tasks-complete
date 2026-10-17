@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Easy Tasks</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0f1729;
+            --bg-card: #1e2a47;
+            --accent: #6366f1;
+            --accent-grad: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --text-main: #ffffff;
+            --text-muted: #a8b5d1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        /* Login Screen Styles */
+        #login-screen {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px 20px;
+            text-align: center;
+            display: none; /* ডিফল্টভাবে হাইড থাকবে, JS চেক করবে */
+        }
+        .logo-icon {
+            font-size: 4rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+        .brand-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--accent-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-group i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .input-group input:focus {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            border-radius: 30px;
+            border: none;
+            background: var(--accent-grad);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            transition: 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.96); }
+        .error-text {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        /* Dashboard Styles */
+        #dashboard-screen {
+            display: none;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+        .top-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 41, 0.95);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .user-greeting h2 { font-size: 1.1rem; font-weight: 700; }
+        .user-greeting p { font-size: 0.8rem; color: var(--text-muted); }
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .balance-container {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+        }
+        .balance-card {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .balance-card.available { border-left: 4px solid var(--success); }
+        .balance-card.pending { border-left: 4px solid var(--warning); }
+        .bal-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px;}
+        .bal-amount { font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 5px;}
+        .bal-amount span { font-size: 1rem; opacity: 0.7; }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px 20px;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Task Card */
+        .task-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .task-card:active { transform: scale(0.98); }
+        .task-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        .task-info { flex: 1; }
+        .task-name { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
+        .task-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;}
+        .task-reward { font-size: 0.9rem; font-weight: 700; color: var(--success); }
+        .task-btn {
+            background: var(--accent-grad);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--bg-card);
+            margin: 0 20px 20px 20px;
+            border-radius: 12px;
+            padding: 5px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            border-left: 4px solid var(--accent);
+        }
+        .toast.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        .empty-state { text-align: center; color: var(--text-muted); padding: 30px 0; font-size: 0.9rem; }
+
+        /* ============================================================
+           FULL-SCREEN TASK DETAILS MODAL
+           ============================================================ */
+        .full-task-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: var(--bg-dark);
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .full-task-modal.show { display: flex; }
+        
+        .modal-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: var(--bg-card);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .modal-header h2 { font-size: 1.1rem; font-weight: 800; }
+        .close-modal-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: none;
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            flex: 1;
+            padding-bottom: 100px; /* Space for fixed footer */
+        }
+
+        .task-detail-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+        .task-detail-reward { 
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .task-detail-desc { 
+            color: var(--text-main); 
+            line-height: 1.6; 
+            margin-bottom: 25px;
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            /* এটি নিশ্চিত করবে যে অ্যাডমিন যেভাবে লিখবে ঠিক সেভাবেই দেখাবে */
+            white-space: pre-line; 
+            word-break: break-word;
+        }
+
+        /* Screenshot Upload Box */
+        .upload-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .upload-box {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            border-radius: 16px;
+            background: rgba(99, 102, 241, 0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-box:active { background: rgba(99, 102, 241, 0.1); }
+        .upload-box i.fa-cloud-upload-alt { font-size: 2.5rem; color: var(--accent); margin-bottom: 10px; }
+        .upload-box span { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
+        .upload-box input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+            background: #000;
+        }
+
+        .modal-footer {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            padding: 15px 20px;
+            background: var(--bg-card);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            z-index: 10;
+        }
+        .submit-task-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-grad);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+        .submit-task-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="logo-icon"><i class="fas fa-tasks"></i></div>
+        <div class="brand-title">Easy Tasks</div>
+        <div class="brand-subtitle">শুধু আপনার নাম লিখে প্রবেশ করুন</div>
+        
+        <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" id="usernameInput" placeholder="আপনার নাম লিখুন" autocomplete="off">
+        </div>
+        
+        <button class="btn-primary" id="loginBtn">লগইন / রেজিস্টার</button>
+        <div class="error-text" id="errorText"></div>
+    </div>
+
+    <!-- DASHBOARD SCREEN -->
+    <div id="dashboard-screen">
+        <div class="top-header">
+            <div class="user-greeting">
+                <h2>স্বাগতম, <span id="displayName">User</span></h2>
+                <p>আজকের টাস্ক সম্পন্ন করুন</p>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> লগআউট</button>
+        </div>
+
+        <div class="balance-container">
+            <div class="balance-card available">
+                <div class="bal-label">Available</div>
+                <div class="bal-amount"><span>৳</span><span id="availBalance">0.00</span></div>
+            </div>
+            <div class="balance-card pending">
+                <div class="bal-label">Pending</div>
+                <div class="bal-amount"><span>৳</span><span id="pendingBalance">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-target="tasksTab">টাস্ক সমূহ</button>
+            <button class="tab-btn" data-target="historyTab">হিস্টোরি</button>
+        </div>
+
+        <div class="content-area">
+            <!-- Tasks Tab -->
+            <div id="tasksTab" class="tab-content active">
+                <div class="section-title"><i class="fas fa-list-ul"></i> উপলব্ধ টাস্ক</div>
+                <div id="taskList"></div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="historyTab" class="tab-content">
+                <div class="section-title"><i class="fas fa-history"></i> সাবমিশন হিস্টোরি</div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL SCREEN TASK DETAILS MODAL -->
+    <div class="full-task-modal" id="taskModal">
+        <div class="modal-header">
+            <h2>টাস্কের বিবরণ</h2>
+            <button class="close-modal-btn" id="closeModalBtn"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="task-detail-title" id="detailName">Task Name</div>
+            <div class="task-detail-reward" id="detailReward">৳ 0.00</div>
+            
+            <!-- এখানে বিবরণ লাইন বাই লাইন দেখাবে -->
+            <div class="task-detail-desc" id="detailDesc"></div>
+
+            <div class="upload-section-title"><i class="fas fa-camera" style="color: var(--accent);"></i> স্ক্রিনশট আপলোড করুন</div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">টাস্কটি সম্পন্ন করার পর স্ক্রিনশট আপলোড করুন। বক্সে টিপ করুন।</p>
+            
+            <div class="upload-box">
+                <i class="fas fa-cloud-upload-alt" id="uploadIcon"></i>
+                <span id="uploadText">টিপ করে স্ক্রিনশট সিলেক্ট করুন</span>
+                <img id="previewImage" class="image-preview" />
+                <input type="file" id="screenshotInput" accept="image/*">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="submit-task-btn" id="submitTaskBtn">টাস্ক সাবমিট করুন</button>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, get, set, update, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCFTd2J6_PYkuhP4ACE8wPzpuLQ1sN0zBY",
+            authDomain: "easy-tasks-fcd38.firebaseapp.com",
+            databaseURL: "https://easy-tasks-fcd38-default-rtdb.firebaseio.com",
+            projectId: "easy-tasks-fcd38",
+            storageBucket: "easy-tasks-fcd38.firebasestorage.app",
+            messagingSenderId: "285294519082",
+            appId: "1:285294519082:web:3e56a0a6b0e27e5923b453"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // DOM Elements
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const usernameInput = document.getElementById('usernameInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorText = document.getElementById('errorText');
+        const displayName = document.getElementById('displayName');
+        const availBalance = document.getElementById('availBalance');
+        const pendingBalance = document.getElementById('pendingBalance');
+        const taskList = document.getElementById('taskList');
+        const historyList = document.getElementById('historyList');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Modal Elements
+        const taskModal = document.getElementById('taskModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const detailName = document.getElementById('detailName');
+        const detailReward = document.getElementById('detailReward');
+        const detailDesc = document.getElementById('detailDesc');
+        const screenshotInput = document.getElementById('screenshotInput');
+        const previewImage = document.getElementById('previewImage');
+        const uploadIcon = document.getElementById('uploadIcon');
+        const uploadText = document.getElementById('uploadText');
+        const submitTaskBtn = document.getElementById('submitTaskBtn');
+        const toast = document.getElementById('toast');
+
+        let currentUser = null;
+        let currentUserName = null;
+        let currentTasks = {};
+        let activeTaskId = null;
+        let uploadedBase64 = null;
+        let unsubscribers = [];
+
+        // UI Helpers
+        function showToast(msg, type = 'success') {
+            toast.textContent = msg;
+            toast.style.borderLeftColor = type === 'error' ? 'var(--danger)' : 'var(--accent)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function formatCurrency(val) {
+            return (parseFloat(val) || 0).toFixed(2);
+        }
+
+        function cleanupListeners() {
+            unsubscribers.forEach(unsub => unsub());
+            unsubscribers = [];
+        }
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.target).classList.add('active');
+            });
+        });
+
+        // --- LOGIN & AUTO LOGIN LOGIC ---
+        
+        // পেজ লোড হওয়ার সময় চেক করবে ইউজার আগে লগইন করা আছে কিনা
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('easyTasksUser');
+            if (savedUser) {
+                currentUserName = savedUser;
+                // সরাসরি ড্যাশবোর্ডে পাঠাবে
+                enterDashboard();
+            } else {
+                // না থাকলে লগইন স্ক্রিন দেখাবে
+                loginScreen.style.display = 'block';
+                dashboardScreen.style.display = 'none';
+            }
+        });
+
+        loginBtn.addEventListener('click', async () => {
+            let name = usernameInput.value.trim();
+            if (!name) {
+                errorText.textContent = 'অনুগ্রহ করে আপনার নাম লিখুন।';
+                return;
+            }
+
+            loginBtn.textContent = 'অপেক্ষা করুন...';
+            loginBtn.disabled = true;
+            errorText.textContent = '';
+
+            try {
+                const userRef = ref(db, `users/${name}`);
+                const snapshot = await get(userRef);
+
+                if (snapshot.exists()) {
+                    currentUserName = name;
+                    currentUser = snapshot.val();
+                    localStorage.setItem('easyTasksUser', name); // লগইন সেভ করে রাখবে
+                    enterDashboard();
+                } else {
+                    const newUser = {
+                        name: name,
+                        availableBalance: 0,
+                        pendingBalance: 0,
+                        joinedAt: Date.now()
+                    };
+                    await set(userRef, newUser);
+                    
+                    currentUserName = name;
+                    currentUser = newUser;
+                    localStorage.setItem('easyTasksUser', name); // লগইন সেভ করে রাখবে
+                    showToast('সফলভাবে রেজিস্ট্রেশন সম্পন্ন হয়েছে!');
+                    enterDashboard();
+                }
+            } catch (error) {
+                console.error(error);
+                errorText.textContent = 'সংযোগে সমস্যা হয়েছে। ইন্টারনেট চেক করুন।';
+            } finally {
+                loginBtn.textContent = 'লগইন / রেজিস্টার';
+                loginBtn.disabled = false;
+            }
+        });
+
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
+
+        // --- DASHBOARD LOGIC ---
+        function enterDashboard() {
+            loginScreen.style.display = 'none';
+            dashboardScreen.style.display = 'flex';
+            displayName.textContent = currentUserName;
+            usernameInput.value = '';
+            setupRealtimeListeners();
+        }
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('easyTasksUser'); // লগআউট করলে সেশন মুছে যাবে
+            cleanupListeners();
+            currentUser = null;
+            currentUserName = null;
+            dashboardScreen.style.display = 'none';
+            loginScreen.style.display = 'block';
+            showToast('লগআউট সম্পন্ন হয়েছে');
+        });
+
+        function setupRealtimeListeners() {
+            cleanupListeners();
+
+            // User Balance
+            const userRef = ref(db, `users/${currentUserName}`);
+            const unsubUser = onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    currentUser = data;
+                    availBalance.textContent = formatCurrency(data.availableBalance);
+                    pendingBalance.textContent = formatCurrency(data.pendingBalance);
+                }
+            });
+            unsubscribers.push(unsubUser);
+
+            // Tasks
+            const tasksRef = ref(db, 'tasks');
+            const unsubTasks = onValue(tasksRef, (snapshot) => {
+                currentTasks = snapshot.val() || {};
+                renderTasks();
+            });
+            unsubscribers.push(unsubTasks);
+
+            // Submissions
+            const subsRef = ref(db, `submissions/${currentUserName}`);
+            const unsubSubs = onValue(subsRef, (snapshot) => {
+                const subs = snapshot.val() || {};
+                renderHistory(subs);
+            });
+            unsubscribers.push(unsubSubs);
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderTasks() {
+            const taskIds = Object.keys(currentTasks);
+            if (taskIds.length === 0) {
+                taskList.innerHTML = '<div class="empty-state">এখনো কোনো টাস্ক যোগ করা হয়নি।</div>';
+                return;
+            }
+
+            taskList.innerHTML = taskIds.map(id => {
+                const t = currentTasks[id];
+                return `
+                    <div class="task-card" data-id="${id}">
+                        <div class="task-icon"><i class="fas fa-tasks"></i></div>
+                        <div class="task-info">
+                            <div class="task-name">${t.name || 'Unnamed Task'}</div>
+                            <div class="task-desc">${t.description ? t.description.replace(/\n/g, ' ') : 'No description'}</div>
+                            <div class="task-reward">রিওয়ার্ড: ৳${formatCurrency(t.reward)}</div>
+                        </div>
+                        <button class="task-btn">করুন</button>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    openTaskModal(e.currentTarget.dataset.id);
+                });
+            });
+        }
+
+        function renderHistory(subs) {
+            const subIds = Object.keys(subs).sort((a,b) => (subs[b].timestamp || 0) - (subs[a].timestamp || 0));
+            if (subIds.length === 0) {
+                historyList.innerHTML = '<div class="empty-state">এখনো কোনো সাবমিশন নেই।</div>';
+                return;
+            }
+
+            historyList.innerHTML = subIds.map(id => {
+                const s = subs[id];
+                let statusColor = 'var(--warning)';
+                let statusText = 'Pending';
+                if (s.status === 'approved') { statusColor = 'var(--success)'; statusText = 'Approved'; }
+                if (s.status === 'rejected') { statusColor = 'var(--danger)'; statusText = 'Rejected'; }
+
+                return `
+                    <div class="task-card" style="align-items: flex-start; cursor: default;">
+                        <div class="task-info">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span class="task-name">${s.taskName || 'Task'}</span>
+                                <span style="color: ${statusColor}; font-size:0.8rem; font-weight:700;">${statusText}</span>
+                            </div>
+                            <div class="task-desc">রিওয়ার্ড: ৳${formatCurrency(s.reward)}</div>
+                            <div class="task-desc" style="margin-top: 5px;">স্ট্যাটাস: ${s.proof === 'screenshot' ? '📸 স্ক্রিনশট দেওয়া হয়েছে' : s.proof}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- FULL SCREEN MODAL LOGIC ---
+        function openTaskModal(taskId) {
+            activeTaskId = taskId;
+            const t = currentTasks[taskId];
+            
+            detailName.textContent = t.name;
+            detailReward.textContent = `৳ ${formatCurrency(t.reward)}`;
+            
+            // এখানে অ্যাডমিন যেভাবে লিখবে ঠিক সেভাবেই দেখাবে (লাইন ব্রেক সহ)
+            detailDesc.textContent = t.description;
+            
+            // Reset Upload Box
+            screenshotInput.value = '';
+            uploadedBase64 = null;
+            previewImage.src = '';
+            previewImage.style.display = 'none';
+            uploadIcon.style.display = 'block';
+            uploadText.style.display = 'block';
+
+            taskModal.classList.add('show');
+        }
+
+        closeModalBtn.addEventListener('click', () => {
+            taskModal.classList.remove('show');
+            activeTaskId = null;
+        });
+
+        // Handle Image Upload & Preview
+        screenshotInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 1024 * 1024) {
+                showToast('ছবির সাইজ ১ মেগাবাইটের কম হতে হবে!', 'error');
+                screenshotInput.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                uploadedBase64 = event.target.result;
+                previewImage.src = uploadedBase64;
+                previewImage.style.display = 'block';
+                uploadIcon.style.display = 'none';
+                uploadText.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Handle Task Submit
+        submitTaskBtn.addEventListener('click', async () => {
+            if (!activeTaskId) return;
+            
+            if (!uploadedBase64) {
+                showToast('অনুগ্রহ করে স্ক্রিনশট আপলোড করুন!', 'error');
+                return;
+            }
+
+            const t = currentTasks[activeTaskId];
+            const reward = t.reward || 0;
+
+            submitTaskBtn.disabled = true;
+            submitTaskBtn.textContent = 'সাবমিট হচ্ছে...';
+
+            try {
+                const newSubRef = push(ref(db, `submissions/${currentUserName}`));
+                await set(newSubRef, {
+                    taskId: activeTaskId,
+                    taskName: t.name,
+                    reward: reward,
+                    proof: 'screenshot',
+                    screenshotBase64: uploadedBase64,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+
+                const userRef = ref(db, `users/${currentUserName}`);
+                const snap = await get(userRef);
+                const currentPending = snap.val().pendingBalance || 0;
+                
+                await update(userRef, {
+                    pendingBalance: currentPending + reward
+                });
+
+                showToast('সাবমিশন সফল হয়েছে!');
+                taskModal.classList.remove('show');
+                activeTaskId = null;
+            } catch (error) {
+                console.error(error);
+                showToast('সাবমিশন ব্যর্থ হয়েছে', 'error');
+            } finally {
+                submitTaskBtn.disabled = false;
+                submitTaskBtn.textContent = 'টাস্ক সাবমিট করুন';
+            }
+        });
+
+    </script>
+</body>
+</html>
